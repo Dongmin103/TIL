@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medi Log Test</title>
+</head>
+<body>
+    <h1>Medi Log Application Test</h1>
+    <p>If you can see this page, the server is working correctly.</p>
+    <p><a href="index.html">Go to Medi Log Application</a></p>
+    
+    <script>
+        console.log('Test page loaded successfully');
+        
+        // Test if we can access the main application
+        fetch('index.html')
+            .then(response => {
+                if (response.ok) {
+                    console.log('Main application is accessible');
+                } else {
+                    console.error('Main application is not accessible');
+                }
+            })
+            .catch(error => {
+                console.error('Error accessing main application:', error);
+            });
+    </script>
+</body>
+</html>

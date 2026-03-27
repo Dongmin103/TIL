@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medi Log - 나만의 약물 복용 다이어리</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Dashboard Page -->
+        <div id="dashboard-page" class="page">
+            <div class="dashboard-header">
+                <div class="app-branding">
+                    <h1 class="app-title">💊 Medi Log</h1>
+                    <p class="app-tagline">나만의 약물 복용 다이어리</p>
+                </div>
+                <div class="current-time">
+                    🕐 <span id="current-time">오늘 14:30</span>
+                </div>
+                <div class="greeting">
+                    👤 <span>좋은 오후에요, 김철수님! 👋</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2 class="card-title">📋 지금 복용할 약</h2>
+                
+                <div class="medication-card" id="med-1">
+                    <div class="medication-header">
+                        <div class="medication-pill" style="background-color: #FF6B6B;">💊</div>
+                        <div class="medication-details">
+                            <h4 class="medication-name">혈압약 (아모디핀)</h4>
+                            <p class="medication-dosage">5mg</p>
+                        </div>
+                    </div>
+                    <div class="schedule-time">
+                        🕐 <span>14:00 - 식후 30분</span>
+                    </div>
+                    <button class="btn btn-success" onclick="takeMedication('med-1', '혈압약')">
+                        ✓ 복용완료
+                    </button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="card-title">⚡ 빠른 액션</h3>
+                <div class="quick-actions">
+                    <button class="quick-action-btn" onclick="showPage('prescription')">
+                        📷
+                        <span>처방전 촬영</span>
+                    </button>
+                    
+                    <button class="quick-action-btn emergency" onclick="emergencyCall()">
+                        📞
+                        <span>응급연락</span>
+                    </button>
+                    
+                    <button class="quick-action-btn" onclick="showPage('analytics')">
+                        📊
+                        <span>리포트</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Prescription Scanner Page -->
+        <div id="prescription-page" class="page hidden">
+            <div class="page-header">
+                <button class="back-button" onclick="showPage('dashboard')">
+                    ← 뒤로
+                </button>
+                <h1 class="page-title">처방전 분석</h1>
+            </div>
+
+            <div class="card">
+                <h2 class="card-title">📷 처방전 촬영</h2>
+                <div class="camera-section">
+                    <div class="camera-placeholder" id="camera-view">
+                        <div class="camera-icon">📷</div>
+                        <p>처방전을 카메라에 맞춰주세요</p>
+                        <div class="camera-frame"></div>
+                    </div>
+                    
+                    <input type="file" id="prescription-input" accept="image/*" style="display: none;" onchange="analyzePrescription(event)">
+                    
+                    <div class="camera-controls">
+                        <button class="btn btn-primary" onclick="document.getElementById('prescription-input').click()">
+                            📷 사진 선택
+                        </button>
+                        <button class="btn btn-secondary" onclick="simulateAnalysis()">
+                            🧪 데모 분석
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analysis Results (Hidden initially) -->
+            <div id="analysis-results" class="hidden">
+                <div class="card">
+                    <h2 class="card-title">🔍 분석 결과</h2>
+                    <div class="analysis-status">
+                        <div class="status-item">
+                            <span class="status-icon">✅</span>
+                            <span>처방전 인식 완료</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-icon">⚠️</span>
+                            <span>약물 상호작용 검사 중...</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Detected Medications -->
+                <div class="card">
+                    <h3 class="card-title">💊 인식된 약물</h3>
+                    <div id="detected-medications">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Drug Interaction Check -->
+                <div class="card">
+                    <h3 class="card-title">⚠️ 약물 상호작용 검사</h3>
+                    <div id="interaction-results">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Recommended Schedule -->
+                <div class="card">
+                    <h3 class="card-title">📅 권장 복용 스케줄</h3>
+                    <div id="recommended-schedule">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button class="btn btn-primary" onclick="addToMyMedications()">
+                            ✅ 내 약물에 추가
+                        </button>
+                        <button class="btn btn-secondary" onclick="showPage('dashboard')">
+                            나중에 하기
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Page -->
+        <div id="analytics-page" class="page hidden">
+            <div class="page-header">
+                <button class="back-button" onclick="showPage('dashboard')">← 뒤로</button>
+                <h1 class="page-title">복용 분석</h1>
+                <button class="filter-btn" onclick="showAnalyticsFilter()">📅</button>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="analytics-summary">
+                <div class="summary-card">
+                    <div class="summary-icon">📊</div>
+                    <div class="summary-content">
+                        <div class="summary-value" id="overall-compliance">85%</div>
+                        <div class="summary-label">전체 복용률</div>
+                    </div>
+                </div>
+                
+                <div class="summary-card">
+                    <div class="summary-icon">🎯</div>
+                    <div class="summary-content">
+                        <div class="summary-value" id="streak-days">7일</div>
+                        <div class="summary-label">연속 복용</div>
+                    </div>
+                </div>
+                
+                <div class="summary-card">
+                    <div class="summary-icon">📈</div>
+                    <div class="summary-content">
+                        <div class="summary-value improvement" id="improvement">+5%</div>
+                        <div class="summary-label">지난달 대비</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Weekly Chart -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">📅 주간 복용 현황</h2>
+                    <div class="chart-period">
+                        <span>2024.03.18 - 2024.03.24</span>
+                    </div>
+                </div>
+                
+                <div class="weekly-chart">
+                    <div class="day-column">
+                        <div class="day-label">월</div>
+                        <div class="day-bar">
+                            <div class="bar-fill perfect" style="height: 100%"></div>
+                        </div>
+                        <div class="day-rate">100%</div>
+                        <div class="day-detail">3/3</div>
+                    </div>
+                    
+                    <div class="day-column">
+                        <div class="day-label">화</div>
+                        <div class="day-bar">
+                            <div class="bar-fill perfect" style="height: 100%"></div>
+                        </div>
+                        <div class="day-rate">100%</div>
+                        <div class="day-detail">3/3</div>
+                    </div>
+                    
+                    <div class="day-column">
+                        <div class="day-label">수</div>
+                        <div class="day-bar">
+                            <div class="bar-fill good" style="height: 67%"></div>
+                        </div>
+                        <div class="day-rate">67%</div>
+                        <div class="day-detail">2/3</div>
+                    </div>
+                    
+                    <div class="day-column">
+                        <div class="day-label">목</div>
+                        <div class="day-bar">
+                            <div class="bar-fill perfect" style="height: 100%"></div>
+                        </div>
+                        <div class="day-rate">100%</div>
+                        <div class="day-detail">3/3</div>
+                    </div>
+                    
+                    <div class="day-column">
+                        <div class="day-label">금</div>
+                        <div class="day-bar">
+                            <div class="bar-fill perfect" style="height: 100%"></div>
+                        </div>
+                        <div class="day-rate">100%</div>
+                        <div class="day-detail">3/3</div>
+                    </div>
+                    
+                    <div class="day-column">
+                        <div class="day-label">토</div>
+                        <div class="day-bar">
+                            <div class="bar-fill missed" style="height: 10%"></div>
+                        </div>
+                        <div class="day-rate">0%</div>
+                        <div class="day-detail">0/3</div>
+                    </div>
+                    
+                    <div class="day-column active">
+                        <div class="day-label">일</div>
+                        <div class="day-bar">
+                            <div class="bar-fill partial" style="height: 67%"></div>
+                        </div>
+                        <div class="day-rate">67%</div>
+                        <div class="day-detail">2/3</div>
+                    </div>
+                </div>
+                
+                <div class="chart-legend">
+                    <div class="legend-item">
+                        <div class="legend-color perfect"></div>
+                        <span>완벽 (100%)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color good"></div>
+                        <span>양호 (75%+)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color partial"></div>
+                        <span>부분 (50%+)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color missed"></div>
+                        <span>누락 (50% 미만)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Monthly Trend -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">📈 월별 트렌드</h2>
+                    <select class="period-selector" onchange="changeTrendPeriod(this.value)">
+                        <option value="3months">최근 3개월</option>
+                        <option value="6months">최근 6개월</option>
+                        <option value="1year">최근 1년</option>
+                    </select>
+                </div>
+                
+                <div class="trend-chart">
+                    <div class="trend-line">
+                        <div class="trend-point" style="left: 10%; bottom: 60%;" data-month="1월" data-rate="75%"></div>
+                        <div class="trend-point" style="left: 30%; bottom: 70%;" data-month="2월" data-rate="80%"></div>
+                        <div class="trend-point active" style="left: 50%; bottom: 85%;" data-month="3월" data-rate="85%"></div>
+                    </div>
+                </div>
+                
+                <div class="trend-summary">
+                    <div class="trend-info">
+                        <span class="trend-percentage">85%</span>
+                        <span class="trend-improvement">지난달 대비 +5% 향상! 🎉</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Medication-specific Analysis -->
+            <div class="card">
+                <h2 class="card-title">💊 약물별 분석</h2>
+                <div class="medication-analytics">
+                    <div class="med-analysis-item">
+                        <div class="med-info">
+                            <div class="med-pill" style="background-color: #FF6B6B;">💊</div>
+                            <div class="med-details">
+                                <h4>혈압약 (아모디핀)</h4>
+                                <p>1일 2회 • 아침, 저녁</p>
+                            </div>
+                        </div>
+                        <div class="med-stats">
+                            <div class="stat-item">
+                                <span class="stat-value">92%</span>
+                                <span class="stat-label">복용률</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-value">5분</span>
+                                <span class="stat-label">평균 지연</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="med-analysis-item">
+                        <div class="med-info">
+                            <div class="med-pill" style="background-color: #4ECDC4;">💊</div>
+                            <div class="med-details">
+                                <h4>당뇨약 (메트포르민)</h4>
+                                <p>1일 2회 • 아침, 저녁</p>
+                            </div>
+                        </div>
+                        <div class="med-stats">
+                            <div class="stat-item">
+                                <span class="stat-value">88%</span>
+                                <span class="stat-label">복용률</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-value">12분</span>
+                                <span class="stat-label">평균 지연</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Insights -->
+            <div class="card">
+                <h2 class="card-title">🤖 AI 분석 인사이트</h2>
+                <div class="insights-list">
+                    <div class="insight-item positive">
+                        <div class="insight-icon">✅</div>
+                        <div class="insight-content">
+                            <h4>우수한 평일 복용률</h4>
+                            <p>평일 복용률이 95%로 매우 우수합니다. 이 패턴을 유지하세요!</p>
+                        </div>
+                    </div>
+                    
+                    <div class="insight-item warning">
+                        <div class="insight-icon">⚠️</div>
+                        <div class="insight-content">
+                            <h4>주말 복용률 개선 필요</h4>
+                            <p>토요일 복용률이 낮습니다. 주말 알림을 30분 일찍 설정해보세요.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="insight-item info">
+                        <div class="insight-icon">💡</div>
+                        <div class="insight-content">
+                            <h4>복용 시간 패턴 분석</h4>
+                            <p>저녁 복용이 아침보다 5분 늦는 경향이 있습니다. 저녁 알림 시간을 조정해보세요.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Prescription Analysis -->
+            <div class="card">
+                <h2 class="card-title">📋 처방전 기반 분석</h2>
+                <div class="prescription-analysis">
+                    <div class="prescription-status">
+                        <div class="status-indicator">
+                            <div class="status-dot active"></div>
+                            <span>최근 처방전: 2024.03.15</span>
+                        </div>
+                        <button class="btn btn-secondary" onclick="showPrescriptionAnalysis()">
+                            📊 상세 분석 보기
+                        </button>
+                    </div>
+                    
+                    <div class="prescription-summary">
+                        <div class="summary-item">
+                            <h4>처방 준수율</h4>
+                            <div class="compliance-bar">
+                                <div class="compliance-fill" style="width: 87%"></div>
+                            </div>
+                            <span class="compliance-text">87% (목표: 90%)</span>
+                        </div>
+                        
+                        <div class="summary-item">
+                            <h4>약물 상호작용</h4>
+                            <div class="interaction-status safe">
+                                <span class="status-icon">✅</span>
+                                <span>안전</span>
+                            </div>
+                        </div>
+                        
+                        <div class="summary-item">
+                            <h4>다음 진료 예정</h4>
+                            <div class="next-appointment">
+                                <span class="appointment-date">2024.04.15</span>
+                                <span class="appointment-days">(21일 후)</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 예시화면 보기 버튼 추가 -->
+                    <div class="demo-section">
+                        <div class="demo-divider">
+                            <span>또는</span>
+                        </div>
+                        <button class="btn btn-primary demo-btn" onclick="showPrescriptionAnalysis()">
+                            👁️ 예시화면 보기
+                        </button>
+                        <p class="demo-description">처방전 분석 기능의 상세한 예시를 확인해보세요</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Export Options -->
+            <div class="card">
+                <h2 class="card-title">📤 리포트 내보내기</h2>
+                <div class="export-options">
+                    <button class="export-btn" onclick="exportReport('pdf')">
+                        📄 PDF 리포트
+                    </button>
+                    <button class="export-btn" onclick="exportReport('excel')">
+                        📊 Excel 데이터
+                    </button>
+                    <button class="export-btn" onclick="shareWithDoctor()">
+                        👨‍⚕️ 의사와 공유
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Page -->
+        <div id="settings-page" class="page hidden">
+            <div class="page-header">
+                <button class="back-button" onclick="showPage('dashboard')">← 뒤로</button>
+                <h1 class="page-title">설정</h1>
+            </div>
+
+            <!-- Profile Section -->
+            <div class="card">
+                <div class="profile-section">
+                    <div class="profile-avatar">
+                        <span class="profile-icon">👤</span>
+                    </div>
+                    <div class="profile-info">
+                        <h3 id="user-name">김철수</h3>
+                        <p id="user-age">45세 • 남성</p>
+                        <p class="profile-join-date">가입일: 2024.01.15</p>
+                    </div>
+                    <button class="edit-profile-btn" onclick="showHealthInfo()">
+                        ✏️
+                    </button>
+                </div>
+            </div>
+
+            <!-- Health Information -->
+            <div class="card">
+                <h3 class="card-title">🏥 건강 정보</h3>
+                <div class="health-info-grid">
+                    <div class="health-item" onclick="editHealthInfo('conditions')">
+                        <div class="health-icon">🩺</div>
+                        <div class="health-content">
+                            <h4>질환 정보</h4>
+                            <p id="health-conditions">고혈압, 당뇨병</p>
+                        </div>
+                        <span class="arrow">›</span>
+                    </div>
+                    
+                    <div class="health-item" onclick="editHealthInfo('allergies')">
+                        <div class="health-icon">⚠️</div>
+                        <div class="health-content">
+                            <h4>알레르기</h4>
+                            <p id="health-allergies">페니실린, 아스피린</p>
+                        </div>
+                        <span class="arrow">›</span>
+                    </div>
+                    
+                    <div class="health-item" onclick="editHealthInfo('emergency')">
+                        <div class="health-icon">🚨</div>
+                        <div class="health-content">
+                            <h4>응급 연락처</h4>
+                            <p id="emergency-contact">김영희 (배우자) • 010-1234-5678</p>
+                        </div>
+                        <span class="arrow">›</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Accessibility Settings -->
+            <div class="card">
+                <h3 class="card-title">♿ 접근성 설정</h3>
+                <div class="settings-list">
+                    <div class="setting-item">
+                        <div class="setting-content">
+                            <h4>큰 글씨 모드</h4>
+                            <p>텍스트 크기를 크게 표시합니다</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="large-text-toggle" onchange="toggleLargeText()">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <div class="setting-content">
+                            <h4>음성 읽기</h4>
+                            <p>텍스트를 음성으로 읽어줍니다</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="voice-reading-toggle" onchange="toggleVoiceReading()">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <div class="setting-content">
+                            <h4>고대비 모드</h4>
+                            <p>화면 대비를 높여 가독성을 향상시킵니다</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="high-contrast-toggle" onchange="toggleHighContrast()">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <div class="setting-content">
+                            <h4>간단한 인터페이스</h4>
+                            <p>복잡한 기능을 숨기고 핵심 기능만 표시</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="simple-ui-toggle" onchange="toggleSimpleUI()">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notification Settings -->
+            <div class="card">
+                <h3 class="card-title">🔔 알림 설정</h3>
+                <div class="settings-list">
+                    <div class="setting-item">
+                        <div class="setting-content">
+                            <h4>복용 알림</h4>
+                            <p>약 복용 시간에 알림을 받습니다</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="medication-alerts" checked onchange="toggleMedicationAlerts()">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <div class="setting-content">
+                            <h4>진동 알림</h4>
+                            <p>알림 시 진동으로 알려줍니다</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="vibration-alerts" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <div class="setting-content">
+                            <h4>소리 알림</h4>
+                            <p>알림 시 소리로 알려줍니다</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="sound-alerts">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <div class="setting-content">
+                            <h4>가족 알림</h4>
+                            <p>복용 상황을 가족에게도 알려줍니다</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="family-alerts" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Voice Test -->
+            <div class="card">
+                <h3 class="card-title">🔊 음성 테스트</h3>
+                <p>음성 읽기 기능을 테스트해보세요.</p>
+                <button class="btn btn-primary" onclick="testVoiceReading()">
+                    🔊 음성 테스트 실행
+                </button>
+            </div>
+
+            <!-- App Info -->
+            <div class="card">
+                <div class="app-info">
+                    <h3>💊 Medi Log</h3>
+                    <p class="app-subtitle">나만의 약물 복용 다이어리</p>
+                    <p>버전 1.0.0</p>
+                    <p class="app-description">개인 맞춤형 약물 관리 및 복용 기록 앱</p>
+                    <div class="app-links">
+                        <button class="link-btn" onclick="showAlert('개인정보처리방침')">개인정보처리방침</button>
+                        <button class="link-btn" onclick="showAlert('이용약관')">이용약관</button>
+                        <button class="link-btn" onclick="showAlert('고객지원')">고객지원</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Logout -->
+            <div class="card">
+                <button class="logout-btn" onclick="confirmLogout()">
+                    🚪 로그아웃
+                </button>
+            </div>
+        </div>
+
+        <!-- Prescription Analysis Modal -->
+        <div id="prescription-analysis-modal" class="modal hidden" style="display: none;">
+            <div class="modal-content large-modal">
+                <div class="modal-header">
+                    <h3 class="modal-title">📋 처방전 기반 상세 분석</h3>
+                    <button class="close-btn" onclick="closePrescriptionAnalysis()">&times;</button>
+                </div>
+                
+                <div class="prescription-tabs">
+                    <button class="tab-btn active" onclick="showPrescriptionTab('overview')">개요</button>
+                    <button class="tab-btn" onclick="showPrescriptionTab('compliance')">복용 준수</button>
+                    <button class="tab-btn" onclick="showPrescriptionTab('interactions')">상호작용</button>
+                    <button class="tab-btn" onclick="showPrescriptionTab('timeline')">타임라인</button>
+                </div>
+                
+                <!-- Overview Tab -->
+                <div id="prescription-overview" class="tab-content active">
+                    <div class="prescription-header">
+                        <div class="prescription-info">
+                            <h4>처방전 정보</h4>
+                            <p><strong>처방일:</strong> 2024.03.15</p>
+                            <p><strong>의료기관:</strong> 서울대학교병원 내과</p>
+                            <p><strong>담당의:</strong> 김의사</p>
+                            <p><strong>처방기간:</strong> 30일</p>
+                        </div>
+                        <div class="prescription-qr">
+                            <div class="qr-placeholder">📱 QR</div>
+                        </div>
+                    </div>
+                    
+                    <div class="prescribed-medications">
+                        <h4>처방 약물</h4>
+                        <div class="prescribed-med-list">
+                            <div class="prescribed-med-item">
+                                <div class="med-icon">💊</div>
+                                <div class="med-info">
+                                    <h5>리시노프릴정 10mg</h5>
+                                    <p>1일 1회, 아침 식후 • 30일분</p>
+                                </div>
+                                <div class="med-status">
+                                    <span class="status-badge new">신규</span>
+                                </div>
+                            </div>
+                            
+                            <div class="prescribed-med-item">
+                                <div class="med-icon">💊</div>
+                                <div class="med-info">
+                                    <h5>메트포르민정 500mg</h5>
+                                    <p>1일 2회, 아침/저녁 식후 • 30일분</p>
+                                </div>
+                                <div class="med-status">
+                                    <span class="status-badge new">신규</span>
+                                </div>
+                            </div>
+                            
+                            <div class="prescribed-med-item">
+                                <div class="med-icon">💊</div>
+                                <div class="med-info">
+                                    <h5>아모디핀정 5mg</h5>
+                                    <p>1일 1회, 아침 식후 • 30일분</p>
+                                </div>
+                                <div class="med-status">
+                                    <span class="status-badge continued">계속</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Compliance Tab -->
+                <div id="prescription-compliance" class="tab-content">
+                    <div class="compliance-overview">
+                        <div class="compliance-score">
+                            <div class="score-circle">
+                                <div class="score-value">87%</div>
+                                <div class="score-label">처방 준수율</div>
+                            </div>
+                        </div>
+                        
+                        <div class="compliance-breakdown">
+                            <div class="breakdown-item">
+                                <span class="breakdown-label">정시 복용</span>
+                                <div class="breakdown-bar">
+                                    <div class="breakdown-fill" style="width: 92%"></div>
+                                </div>
+                                <span class="breakdown-value">92%</span>
+                            </div>
+                            
+                            <div class="breakdown-item">
+                                <span class="breakdown-label">용량 준수</span>
+                                <div class="breakdown-bar">
+                                    <div class="breakdown-fill" style="width: 95%"></div>
+                                </div>
+                                <span class="breakdown-value">95%</span>
+                            </div>
+                            
+                            <div class="breakdown-item">
+                                <span class="breakdown-label">빈도 준수</span>
+                                <div class="breakdown-bar">
+                                    <div class="breakdown-fill" style="width: 88%"></div>
+                                </div>
+                                <span class="breakdown-value">88%</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="compliance-recommendations">
+                        <h4>개선 권장사항</h4>
+                        <div class="recommendation-list">
+                            <div class="recommendation-item">
+                                <div class="rec-icon">⏰</div>
+                                <div class="rec-content">
+                                    <h5>복용 시간 일정화</h5>
+                                    <p>매일 같은 시간에 복용하여 혈중 농도를 일정하게 유지하세요.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="recommendation-item">
+                                <div class="rec-icon">📱</div>
+                                <div class="rec-content">
+                                    <h5>알림 설정 최적화</h5>
+                                    <p>주말 복용률이 낮으니 주말 알림을 더 일찍 설정해보세요.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Interactions Tab -->
+                <div id="prescription-interactions" class="tab-content">
+                    <div class="interaction-summary">
+                        <div class="interaction-status-card safe">
+                            <div class="status-icon">✅</div>
+                            <div class="status-content">
+                                <h4>전체적으로 안전</h4>
+                                <p>현재 처방된 약물들 간에 심각한 상호작용은 없습니다.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="interaction-details">
+                        <h4>약물 간 상호작용 분석</h4>
+                        <div class="interaction-matrix">
+                            <div class="matrix-item safe">
+                                <div class="drug-pair">
+                                    <span>리시노프릴</span>
+                                    <span>×</span>
+                                    <span>아모디핀</span>
+                                </div>
+                                <div class="interaction-level">
+                                    <span class="level-badge safe">안전</span>
+                                    <p>혈압 강하 효과 상승, 정기 모니터링 권장</p>
+                                </div>
+                            </div>
+                            
+                            <div class="matrix-item safe">
+                                <div class="drug-pair">
+                                    <span>메트포르민</span>
+                                    <span>×</span>
+                                    <span>아모디핀</span>
+                                </div>
+                                <div class="interaction-level">
+                                    <span class="level-badge safe">안전</span>
+                                    <p>상호작용 없음, 안전하게 병용 가능</p>
+                                </div>
+                            </div>
+                            
+                            <div class="matrix-item safe">
+                                <div class="drug-pair">
+                                    <span>리시노프릴</span>
+                                    <span>×</span>
+                                    <span>메트포르민</span>
+                                </div>
+                                <div class="interaction-level">
+                                    <span class="level-badge safe">안전</span>
+                                    <p>상호작용 없음, 안전하게 병용 가능</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="food-interactions">
+                        <h4>음식 및 생활습관 주의사항</h4>
+                        <div class="food-warning-list">
+                            <div class="food-warning">
+                                <div class="warning-icon">🥃</div>
+                                <div class="warning-content">
+                                    <h5>알코올 주의</h5>
+                                    <p>혈압약 복용 중 과도한 음주는 혈압 강하를 증가시킬 수 있습니다.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="food-warning">
+                                <div class="warning-icon">🍌</div>
+                                <div class="warning-content">
+                                    <h5>칼륨 섭취 주의</h5>
+                                    <p>리시노프릴 복용 중 과도한 칼륨 섭취는 주의가 필요합니다.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Timeline Tab -->
+                <div id="prescription-timeline" class="tab-content">
+                    <div class="timeline-header">
+                        <h4>처방 이력 타임라인</h4>
+                        <div class="timeline-filter">
+                            <select onchange="filterTimeline(this.value)">
+                                <option value="all">전체 기간</option>
+                                <option value="3months">최근 3개월</option>
+                                <option value="6months">최근 6개월</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="prescription-timeline">
+                        <div class="timeline-item current">
+                            <div class="timeline-date">2024.03.15</div>
+                            <div class="timeline-content">
+                                <h5>현재 처방</h5>
+                                <p>리시노프릴, 메트포르민 신규 추가</p>
+                                <p>아모디핀 계속 처방</p>
+                                <div class="timeline-status">진행 중</div>
+                            </div>
+                        </div>
+                        
+                        <div class="timeline-item">
+                            <div class="timeline-date">2024.02.15</div>
+                            <div class="timeline-content">
+                                <h5>이전 처방</h5>
+                                <p>아모디핀 5mg 단독 처방</p>
+                                <div class="timeline-status completed">완료</div>
+                            </div>
+                        </div>
+                        
+                        <div class="timeline-item">
+                            <div class="timeline-date">2024.01.15</div>
+                            <div class="timeline-content">
+                                <h5>초기 처방</h5>
+                                <p>고혈압 진단 후 첫 처방</p>
+                                <div class="timeline-status completed">완료</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" onclick="closePrescriptionAnalysis()">닫기</button>
+                    <button class="btn btn-primary" onclick="exportPrescriptionReport()">리포트 내보내기</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-navigation">
+            <button class="nav-item active" onclick="showPage('dashboard')">
+                🏠<span>홈</span>
+            </button>
+            <button class="nav-item" onclick="showPage('prescription')">
+                📷<span>처방전</span>
+            </button>
+            <button class="nav-item" onclick="showPage('analytics')">
+                📊<span>분석</span>
+            </button>
+            <button class="nav-item" onclick="showPage('settings')">
+                ⚙️<span>설정</span>
+            </button>
+        </nav>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medi Log - 스마트 복용 관리</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .app-container {
+            max-width: 414px;
+            margin: 0 auto;
+            min-height: 100vh;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            position: relative;
+            padding-bottom: 80px;
+        }
+
+        .page {
+            padding: 20px;
+        }
+
+        .dashboard-header {
+            margin-bottom: 24px;
+            padding-top: 20px;
+        }
+
+        .current-time {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .greeting {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 20px;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 16px;
+        }
+
+        .medication-card {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            transition: all 0.2s;
+        }
+
+        .medication-card.completed {
+            background: #f0fdf4;
+            border-color: #22c55e;
+        }
+
+        .medication-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .medication-pill {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .medication-details {
+            flex: 1;
+        }
+
+        .medication-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin: 0;
+        }
+
+        .medication-dosage {
+            font-size: 14px;
+            color: #666;
+            margin: 4px 0 0 0;
+        }
+
+        .schedule-time {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 16px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #4ade80, #22c55e);
+            color: white;
+            width: 100%;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+        }
+
+        .completed-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: #22c55e;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .progress-section {
+            padding: 16px 0;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: #f1f5f9;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 6px;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .quick-action-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 16px 12px;
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-height: 80px;
+        }
+
+        .quick-action-btn:hover {
+            background: #f1f5f9;
+            transform: translateY(-1px);
+        }
+
+        .quick-action-btn.emergency {
+            background: #fef2f2;
+            border-color: #fecaca;
+            color: #dc2626;
+        }
+
+        .bottom-navigation {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 414px;
+            background: white;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            padding: 8px 0;
+            z-index: 100;
+        }
+
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 4px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #9ca3af;
+        }
+
+        .nav-item.active {
+            color: #667eea;
+        }
+
+        .nav-item span {
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 414px) {
+            .app-container {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Dashboard Page -->
+        <div id="dashboard-page" class="page">
+            <div class="dashboard-header">
+                <div class="current-time">
+                    🕐 <span id="current-time">오늘 14:30</span>
+                </div>
+                <div class="greeting">
+                    👤 <span>좋은 오후에요, 김철수님! 👋</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2 class="card-title">📋 지금 복용할 약</h2>
+                
+                <div class="medication-card" id="med-1">
+                    <div class="medication-header">
+                        <div class="medication-pill" style="background-color: #FF6B6B;">💊</div>
+                        <div class="medication-details">
+                            <h4 class="medication-name">혈압약 (아모디핀)</h4>
+                            <p class="medication-dosage">5mg</p>
+                        </div>
+                    </div>
+                    <div class="schedule-time">
+                        🕐 <span>14:00 - 식후 30분</span>
+                    </div>
+                    <button class="btn btn-success" onclick="takeMedication('med-1', '혈압약')">
+                        ✓ 복용완료
+                    </button>
+                </div>
+
+                <div class="medication-card" id="med-2">
+                    <div class="medication-header">
+                        <div class="medication-pill" style="background-color: #4ECDC4;">💊</div>
+                        <div class="medication-details">
+                            <h4 class="medication-name">당뇨약 (메트포르민)</h4>
+                            <p class="medication-dosage">500mg</p>
+                        </div>
+                    </div>
+                    <div class="schedule-time">
+                        🕐 <span>14:00 - 식사와 함께</span>
+                    </div>
+                    <button class="btn btn-success" onclick="takeMedication('med-2', '당뇨약')">
+                        ✓ 복용완료
+                    </button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="progress-section">
+                    <h3 class="card-title">📊 오늘의 복용률</h3>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill" style="width: 50%;"></div>
+                    </div>
+                    <div class="progress-text">
+                        <span id="progress-percentage">50%</span>
+                        <span style="font-size: 14px; color: #666;">
+                            <span id="completed-count">1</span>/<span id="total-count">2</span> 완료
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="card-title">⚡ 빠른 액션</h3>
+                <div class="quick-actions">
+                    <button class="quick-action-btn" onclick="showAlert('약 추가 기능')">
+                        📷
+                        <span>약 추가</span>
+                    </button>
+                    
+                    <button class="quick-action-btn emergency" onclick="emergencyCall()">
+                        📞
+                        <span>응급연락</span>
+                    </button>
+                    
+                    <button class="quick-action-btn" onclick="showPage('analytics')">
+                        📊
+                        <span>리포트</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Page -->
+        <div id="analytics-page" class="page hidden">
+            <div class="card">
+                <h2 class="card-title">📊 복용 분석</h2>
+                <p>이번 주 복용률: 85%</p>
+                <p>지난달 대비 +5% 향상! 🎉</p>
+                <br>
+                <h4>💡 개선 제안</h4>
+                <p>• 토요일 복용률이 낮습니다</p>
+                <p>• 주말 알림을 30분 일찍 설정해보세요</p>
+            </div>
+        </div>
+
+        <!-- Settings Page -->
+        <div id="settings-page" class="page hidden">
+            <div class="card">
+                <h2 class="card-title">⚙️ 설정</h2>
+                <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 20px;">
+                    <div style="width: 64px; height: 64px; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px;">
+                        👤
+                    </div>
+                    <div>
+                        <h3>김철수</h3>
+                        <p style="color: #666;">45세 • 남성</p>
+                    </div>
+                </div>
+                <p>🔔 알림 설정</p>
+                <p>❤️ 응급 연락처: 김영희 (배우자)</p>
+                <p>🛡️ 개인정보 보호</p>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-navigation">
+            <button class="nav-item active" onclick="showPage('dashboard')">
+                🏠
+                <span>홈</span>
+            </button>
+            <button class="nav-item" onclick="showAlert('약 추가 기능')">
+                ➕
+                <span>추가</span>
+            </button>
+            <button class="nav-item" onclick="showPage('analytics')">
+                📊
+                <span>분석</span>
+            </button>
+            <button class="nav-item" onclick="showPage('settings')">
+                ⚙️
+                <span>설정</span>
+            </button>
+        </nav>
+    </div>
+
+    <script>
+        let completedMeds = 1;
+        let totalMeds = 2;
+
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('ko-KR', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: false 
+            });
+            document.getElementById('current-time').textContent = `오늘 ${timeString}`;
+        }
+
+        function takeMedication(medId, medName) {
+            const medCard = document.getElementById(medId);
+            const button = medCard.querySelector('.btn-success');
+            
+            // 완료 상태로 변경
+            medCard.classList.add('completed');
+            button.outerHTML = `
+                <div class="completed-badge">
+                    ✓ 복용완료
+                </div>
+            `;
+            
+            // 진행률 업데이트
+            completedMeds = Math.min(completedMeds + 1, totalMeds);
+            updateProgress();
+            
+            // 성공 메시지
+            showAlert(`${medName} 복용 완료! ✅`);
+        }
+
+        function updateProgress() {
+            const percentage = Math.round((completedMeds / totalMeds) * 100);
+            document.getElementById('progress-fill').style.width = `${percentage}%`;
+            document.getElementById('progress-percentage').textContent = `${percentage}%`;
+            document.getElementById('completed-count').textContent = completedMeds;
+        }
+
+        function showPage(pageId) {
+            // 모든 페이지 숨기기
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.add('hidden');
+            });
+            
+            // 선택된 페이지 보이기
+            document.getElementById(`${pageId}-page`).classList.remove('hidden');
+            
+            // 네비게이션 활성 상태 업데이트
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.target.closest('.nav-item').classList.add('active');
+        }
+
+        function emergencyCall() {
+            showAlert('김영희 (배우자)에게 연결 중... 📞');
+        }
+
+        function showAlert(message) {
+            // 간단한 토스트 알림
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: #363636;
+                color: white;
+                padding: 12px 24px;
+                border-radius: 8px;
+                z-index: 1000;
+                font-size: 14px;
+                max-width: 300px;
+                text-align: center;
+            `;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                document.body.removeChild(toast);
+            }, 3000);
+        }
+
+        // 시간 업데이트
+        updateTime();
+        setInterval(updateTime, 1000);
+    </script>
+</body>
+</html>
